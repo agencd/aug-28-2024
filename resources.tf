@@ -27,7 +27,7 @@ resource "aws_subnet" "main" {
 module "remote_module" {
   # source = terraform-aws-security-groups-027
   source  = "app.terraform.io/027-spring-cloud/security-groups-027/aws"
-  version = "1.0.0"
+  version = "2.0.0"
   vpc_id  = aws_vpc.main.id
 
   security_groups = {
@@ -56,8 +56,16 @@ module "remote_module" {
           protocol    = "tcp"
           description = "https ingress rule"
         }
-      ]
-    },
+      ],
+      "egress_rules" = [
+        {
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+          cidr_blocks = ["0.0.0.0/0"]
+        }
+      ]  
+    }
   }
 }
 
@@ -67,7 +75,7 @@ resource "aws_instance" "server" {
   key_name      = aws_key_pair.deployer.key_name
 
   subnet_id              = aws_subnet.main.id
-  vpc_security_group_ids = [module.remote_module.security_group_id["web"]]
+  vpc_security_group_ids = [module.remote_module.my_sg_id.web]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -81,4 +89,40 @@ resource "aws_instance" "server" {
   tags = {
     Name = join("-", [var.prefix, "ec2"])
   }
+}
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = join("-", [var.prefix, "igw"])
+  }
+}
+
+resource "aws_eip" "web" {
+  instance = aws_instance.server.id
+  domain   = "vpc"
+}
+
+###
+resource "aws_route_table" "main" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
+
+  tags = {
+    Name = join("-", [var.prefix, "route-table"])
+  }
+}
+
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.main.id
+  route_table_id = aws_route_table.main.id
+}
+
+output "web_server_ip" {
+  value = aws_eip.web.public_ip
 }
