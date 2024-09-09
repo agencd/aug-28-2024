@@ -4,13 +4,13 @@ resource "aws_key_pair" "deployer" {
 }
 
 variable "prefix" {
-  type = string
+  type    = string
   default = "project-aug-28"
 }
 
 resource "aws_vpc" "main" {
   cidr_block = "172.16.0.0/16"
-  tags       = {
+  tags = {
     Name = join("-", ["${var.prefix}", "vpc"])
   }
 }
@@ -64,7 +64,7 @@ module "remote_module" {
           protocol    = "-1"
           cidr_blocks = ["0.0.0.0/0"]
         }
-      ]  
+      ]
     }
   }
 }
