@@ -10,8 +10,8 @@ on:
         type: string
         required: false
 env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.SECRET_PRIME }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: us-east-1
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - name: My First Terraform Setup
         uses: hashicorp/setup-terraform@v2
         with:
-          cli_config_credentials_token: ${{ secrets.MY_TERRAFORM_LOGIN_TOKEN }}
+          cli_config_credentials_token: ${{ secrets.TF_TOKEN }}
       
       - name: Run Terraform Init
         run: terraform init
